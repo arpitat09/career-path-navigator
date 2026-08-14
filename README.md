@@ -168,6 +168,7 @@ Prepare for Career
 ## 🏗️ System Architecture
 
 CareerPath AI follows a full-stack architecture consisting of a frontend, backend, database, and external services.
+
                     ┌──────────────────────┐
                     │        User          │
                     └──────────┬───────────┘
@@ -189,10 +190,10 @@ CareerPath AI follows a full-stack architecture consisting of a frontend, backen
           ┌────────────────────┼────────────────────┐
           │                    │                    │
           ▼                    ▼                    ▼
-   ┌─────────────┐      ┌─────────────┐     ┌─────────────┐
-   │  MongoDB    │      │ Gemini AI   │     │ Adzuna API  │
-   │  Database   │      │ AI Mentor   │     │ Job Data    │
-   └─────────────┘      └─────────────┘     └─────────────┘
+     ┌─────────────┐      ┌─────────────┐     ┌─────────────┐
+     │  MongoDB    │      │ Gemini AI   │     │ Adzuna API  │
+     │  Database   │      │ AI Mentor   │     │ Job Data    │
+     └─────────────┘      └─────────────┘     └─────────────┘
 
 ---
 
@@ -247,48 +248,48 @@ This allows CareerPath AI to connect career guidance with real-world job opportu
 
 ## 📁 Project Structure
 
-career-path-navigator/
-│
-├── frontend/
-│   ├── public/
-│   ├── src/
-│   │   ├── assets/
-│   │   ├── components/
-│   │   ├── context/
-│   │   ├── hooks/
-│   │   ├── layouts/
-│   │   ├── pages/
-│   │   ├── routes/
-│   │   ├── services/
-│   │   ├── styles/
-│   │   ├── types/
-│   │   ├── utils/
-│   │   ├── App.tsx
-│   │   ├── App.css
-│   │   ├── index.css
-│   │   └── main.tsx
-│   │
-│   ├── package.json
-│   ├── vite.config.ts
-│   └── tsconfig.json
-│
-├── backend/
-│   ├── controllers/
-│   ├── data/
-│   ├── models/
-│   ├── routes/
-│   │   ├── auth.js
-│   │   ├── jobs.js
-│   │   ├── mentor.js
-│   │   └── resume.js
-│   │
-│   ├── services/
-│   ├── db.js
-│   ├── server.js
-│   └── package.json
-│
-├── .gitignore
-└── README.md
+    career-path-navigator/
+    │
+    ├── frontend/
+    │   ├── public/
+    │   ├── src/
+    │   │   ├── assets/
+    │   │   ├── components/
+    │   │   ├── context/
+    │   │   ├── hooks/
+    │   │   ├── layouts/
+    │   │   ├── pages/
+    │   │   ├── routes/
+    │   │   ├── services/
+    │   │   ├── styles/
+    │   │   ├── types/
+    │   │   ├── utils/
+    │   │   ├── App.tsx
+    │   │   ├── App.css
+    │   │   ├── index.css
+    │   │   └── main.tsx
+    │   │
+    │   ├── package.json
+    │   ├── vite.config.ts
+    │   └── tsconfig.json
+    │
+    ├── backend/
+    │   ├── controllers/
+    │   ├── data/
+    │   ├── models/
+    │   ├── routes/
+    │   │   ├── auth.js
+    │   │   ├── jobs.js
+    │   │   ├── mentor.js
+    │   │   └── resume.js
+    │   │
+    │   ├── services/
+    │   ├── db.js
+    │   ├── server.js
+    │   └── package.json
+    │
+    ├── .gitignore
+    └── README.md
 
 The current repository follows this frontend/backend separation, with dedicated route modules for authentication, resumes, AI mentoring, and jobs.
 
