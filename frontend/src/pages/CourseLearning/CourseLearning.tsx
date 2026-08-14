@@ -20,6 +20,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   getCourseById,
 } from "../../components/services/courses";
+
 import {
   getCurrentUserId,
   userPurchaseKey,
@@ -55,8 +56,9 @@ export default function CourseLearning() {
       return false;
     }
 
-    return (
-      Boolean(purchaseKey && localStorage.getItem(purchaseKey) === "true")
+    return Boolean(
+      purchaseKey &&
+        localStorage.getItem(purchaseKey) === "true"
     );
   }, [course, purchaseKey]);
 
@@ -82,11 +84,14 @@ export default function CourseLearning() {
       try {
         const parsed = JSON.parse(savedProgress);
 
-        return Array.isArray(parsed) ? parsed : [];
+        return Array.isArray(parsed)
+          ? parsed
+          : [];
       } catch {
         if (progressKey) {
           localStorage.removeItem(progressKey);
         }
+
         return [];
       }
     });
@@ -112,18 +117,26 @@ export default function CourseLearning() {
    * the course.
    */
   useEffect(() => {
-    if (!course) return;
+    if (!course) {
+      return;
+    }
 
     if (!currentUserId) {
-      navigate("/login", { replace: true });
+      navigate("/login", {
+        replace: true,
+      });
+
       return;
     }
 
     if (!purchased) {
       navigate(
         `/courses/${course.id}`,
-        { replace: true }
+        {
+          replace: true,
+        }
       );
+
       return;
     }
   }, [
@@ -184,7 +197,10 @@ export default function CourseLearning() {
         ? current.filter(
             (id) => id !== moduleId
           )
-        : [...current, moduleId]
+        : [
+            ...current,
+            moduleId,
+          ]
     );
   };
 
@@ -244,7 +260,10 @@ export default function CourseLearning() {
       updated.length >= totalLessons &&
       certificateKey
     ) {
-      const existing = localStorage.getItem(certificateKey);
+      const existing =
+        localStorage.getItem(
+          certificateKey
+        );
 
       if (!existing) {
         localStorage.setItem(
@@ -253,9 +272,12 @@ export default function CourseLearning() {
             courseId: course.id,
             courseTitle: course.title,
             userId: currentUserId,
-            userName: getCurrentUserName(),
-            completedAt: new Date().toISOString(),
-            certificateId: `CPA-${course.id}-${currentUserId}-${Date.now()}`,
+            userName:
+              getCurrentUserName(),
+            completedAt:
+              new Date().toISOString(),
+            certificateId:
+              `CPA-${course.id}-${currentUserId}-${Date.now()}`,
           })
         );
       }
@@ -291,13 +313,32 @@ export default function CourseLearning() {
       return;
     }
 
-    setSubmittedQuestions((current) => [
-      ...current,
-      questionId,
-    ]);
+    setSubmittedQuestions(
+      (current) => [
+        ...current,
+        questionId,
+      ]
+    );
 
     setMessage(
       "Answer submitted. Check the explanation below."
+    );
+  };
+
+  /*
+   * Continue to final assessment.
+   *
+   * IMPORTANT:
+   * This is the fix for the button that
+   * previously did nothing.
+   */
+  const goToFinalAssessment = () => {
+    if (!course) {
+      return;
+    }
+
+    navigate(
+      `/courses/${course.id}/assessment`
     );
   };
 
@@ -345,7 +386,6 @@ export default function CourseLearning() {
             </div>
 
           </div>
-
 
           <div className="flex items-center gap-4">
 
@@ -400,11 +440,13 @@ export default function CourseLearning() {
 
             </div>
 
-
             <div className="space-y-3">
 
               {course.modules.map(
-                (module, moduleIndex) => {
+                (
+                  module,
+                  moduleIndex
+                ) => {
 
                   const isOpen =
                     openModules.includes(
@@ -531,9 +573,7 @@ export default function CourseLearning() {
                                           : "text-gray-300"
                                       }`}
                                     >
-                                      {lessonIndex +
-                                        1}
-                                      .{" "}
+                                      {lessonIndex + 1}.{" "}
                                       {lesson.title}
                                     </p>
 
@@ -660,7 +700,6 @@ export default function CourseLearning() {
 
                 </div>
 
-
                 <div className="mt-7 whitespace-pre-line text-[15px] leading-8 text-gray-300">
                   {selectedLesson.writtenContent}
                 </div>
@@ -693,7 +732,10 @@ export default function CourseLearning() {
                 <div className="space-y-6">
 
                   {selectedLesson.questions.map(
-                    (question, questionIndex) => {
+                    (
+                      question,
+                      questionIndex
+                    ) => {
 
                       const submitted =
                         submittedQuestions.includes(
@@ -750,7 +792,9 @@ export default function CourseLearning() {
                                     disabled={submitted}
                                     onClick={() =>
                                       setAnswers(
-                                        (current) => ({
+                                        (
+                                          current
+                                        ) => ({
                                           ...current,
                                           [question.id]:
                                             optionIndex,
@@ -935,12 +979,17 @@ export default function CourseLearning() {
                   <p className="mx-auto mt-2 max-w-lg text-sm leading-6 text-gray-400">
                     You have completed every lesson in
                     this course. Your final assessment
-                    will be available next.
+                    is now available.
                   </p>
+
+                  {/* FIXED BUTTON */}
 
                   <button
                     type="button"
-                    className="mt-6 rounded-xl bg-green-600 px-6 py-3 font-semibold hover:bg-green-500"
+                    onClick={
+                      goToFinalAssessment
+                    }
+                    className="mt-6 inline-flex items-center justify-center rounded-xl bg-green-600 px-6 py-3 font-semibold transition hover:bg-green-500"
                   >
                     Continue to Final Assessment
                   </button>

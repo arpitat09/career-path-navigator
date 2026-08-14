@@ -22,6 +22,7 @@ import CourseLearning from "../pages/CourseLearning/CourseLearning";
 import MyLearnings from "../pages/MyLearnings/MyLearnings";
 import Certificates from "../pages/Certificates/Certificates";
 import Jobs from "../pages/Jobs/Jobs";
+import FinalAssessment from "../pages/FinalAssessment/FinalAssessment";
 
 // ================= SAVED JOBS =================
 import SavedJobs from "../pages/SavedJobs/SavedJobs";
@@ -164,6 +165,11 @@ export default function AppRoutes() {
           <Route
             path="/settings"
             element={<Settings />}
+          />
+
+          <Route
+            path="/courses/:courseId/assessment"
+            element={<FinalAssessment />}
           />
 
         </Route>
