@@ -4,19 +4,12 @@ import {
   Mail,
   Lock,
   ArrowRight,
+  Home as HomeIcon,
 } from "lucide-react";
 
-import {
-  useCallback,
-  useState,
-} from "react";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 
-import {
-  Link,
-  useNavigate,
-} from "react-router-dom";
-
-import Button from "../../components/ui/Button";
 import GoogleLogin from "../../components/common/GoogleLogin";
 
 const API_URL =
@@ -41,10 +34,14 @@ export default function Login() {
   const [error, setError] =
     useState("");
 
+  // =====================================================
+  // NORMAL EMAIL/PASSWORD LOGIN
+  // =====================================================
+
   const handleLogin = async (
-    e: React.FormEvent
+    event: React.FormEvent<HTMLFormElement>
   ) => {
-    e.preventDefault();
+    event.preventDefault();
 
     setError("");
 
@@ -63,8 +60,7 @@ export default function Login() {
         {
           method: "POST",
           headers: {
-            "Content-Type":
-              "application/json",
+            "Content-Type": "application/json",
           },
           body: JSON.stringify({
             email: email.trim(),
@@ -73,106 +69,183 @@ export default function Login() {
         }
       );
 
-      const data =
-        await response.json();
+      const data = await response.json();
 
       if (!response.ok || !data.success) {
         throw new Error(
           data.message ||
-            "Login failed."
+            "Invalid email or password."
         );
       }
 
+      // Save JWT
       localStorage.setItem(
         "token",
         data.token
       );
 
+      // Save user
       localStorage.setItem(
         "user",
         JSON.stringify({
           id: data._id,
           name: data.name,
           email: data.email,
-          picture:
-            data.picture || "",
+          picture: data.picture || "",
         })
       );
 
-      // After login, return to the public home page.
-      navigate("/", {
+      // Navigate to dashboard
+      navigate("/dashboard", {
         replace: true,
       });
     } catch (err) {
-      console.error(
-        "Login error:",
-        err
-      );
+      console.error("Login error:", err);
 
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Something went wrong. Please try again."
-      );
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError(
+          "Unable to login. Please try again."
+        );
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  /*
-   * These callbacks are memoized so the GoogleLogin
-   * component does not receive a new callback function
-   * on every Login render.
-   */
-  const handleGoogleSuccess =
-    useCallback(
-      (data: {
-        token: string;
-        user: {
-          id: string;
-          name: string;
-          email: string;
-          picture?: string;
-        };
-      }) => {
-        localStorage.setItem(
-          "token",
-          data.token
-        );
+  // =====================================================
+  // GOOGLE LOGIN SUCCESS
+  // =====================================================
 
-        localStorage.setItem(
-          "user",
-          JSON.stringify(data.user)
-        );
-
-        setError("");
-
-        navigate("/", {
-          replace: true,
-        });
-      },
-      [navigate]
+  const handleGoogleSuccess = (data: {
+    token: string;
+    user: {
+      id: string;
+      name: string;
+      email: string;
+      picture?: string;
+    };
+  }) => {
+    console.log(
+      "Google login successful:",
+      data
     );
 
-  const handleGoogleError =
-    useCallback(
-      (message: string) => {
-        setError(message);
-      },
-      []
+    setError("");
+
+    // Save JWT
+    localStorage.setItem(
+      "token",
+      data.token
     );
+
+    // Save user
+    localStorage.setItem(
+      "user",
+      JSON.stringify({
+        id: data.user.id,
+        name: data.user.name,
+        email: data.user.email,
+        picture:
+          data.user.picture || "",
+      })
+    );
+
+    // Go to dashboard
+    navigate("/dashboard", {
+      replace: true,
+    });
+  };
+
+  // =====================================================
+  // GOOGLE LOGIN ERROR
+  // =====================================================
+
+  const handleGoogleError = (
+    message: string
+  ) => {
+    console.error(
+      "Google login error:",
+      message
+    );
+
+    setError(message);
+  };
 
   return (
-    <div className="min-h-screen bg-[#050816] text-white">
+    <div className="relative min-h-screen bg-[#050816] text-white">
+
+      {/* =================================================
+          BACK TO HOME
+      ================================================= */}
+
+      <Link
+        to="/"
+        className="
+          absolute
+          left-6
+          top-6
+          z-50
+          flex
+          items-center
+          gap-2
+          rounded-xl
+          border
+          border-white/10
+          bg-[#080b18]
+          px-4
+          py-2.5
+          text-sm
+          text-gray-300
+          shadow-lg
+          transition
+          hover:bg-white/10
+          hover:text-white
+        "
+      >
+        <HomeIcon size={17} />
+
+        <span>
+          Back to Home
+        </span>
+      </Link>
+
+      {/* =================================================
+          MAIN GRID
+      ================================================= */}
+
       <div className="grid min-h-screen lg:grid-cols-2">
 
-        {/* LEFT SIDE */}
-        <div className="hidden flex-col justify-center bg-gradient-to-br from-indigo-700 to-purple-900 p-16 lg:flex">
+        {/* =================================================
+            LEFT SIDE
+        ================================================= */}
+
+        <div
+          className="
+            hidden
+            flex-col
+            justify-center
+            bg-gradient-to-br
+            from-indigo-700
+            to-purple-900
+            p-16
+            lg:flex
+          "
+        >
           <h1 className="text-5xl font-bold">
             CareerPath AI
           </h1>
 
-          <p className="mt-8 text-xl leading-9 text-indigo-100">
+          <p
+            className="
+              mt-8
+              max-w-xl
+              text-xl
+              leading-9
+              text-indigo-100
+            "
+          >
             Welcome back. Continue your
             AI-powered career journey and
             unlock personalized roadmaps,
@@ -181,99 +254,205 @@ export default function Login() {
           </p>
         </div>
 
-        {/* RIGHT SIDE */}
-        <div className="flex items-center justify-center p-8">
+        {/* =================================================
+            RIGHT SIDE
+        ================================================= */}
 
-          <div className="w-full max-w-md rounded-3xl border border-white/10 bg-white/5 p-10 backdrop-blur-xl">
+        <div
+          className="
+            flex
+            min-h-screen
+            items-center
+            justify-center
+            bg-[#050816]
+            p-8
+          "
+        >
+          <div
+            className="
+              w-full
+              max-w-md
+              rounded-3xl
+              border
+              border-white/10
+              bg-white/5
+              p-10
+              shadow-2xl
+              backdrop-blur-xl
+            "
+          >
+
+            {/* TITLE */}
 
             <h2 className="text-4xl font-bold">
               Welcome Back
             </h2>
 
             <p className="mt-3 text-gray-400">
-              Sign in to your account
+              Sign in to your CareerPath AI account
             </p>
 
-            {/* ERROR */}
+            {/* =================================================
+                ERROR MESSAGE
+            ================================================= */}
+
             {error && (
-              <div className="mt-6 rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+              <div
+                className="
+                  mt-6
+                  rounded-xl
+                  border
+                  border-red-500/20
+                  bg-red-500/10
+                  px-4
+                  py-3
+                  text-sm
+                  leading-6
+                  text-red-400
+                "
+              >
                 {error}
               </div>
             )}
 
-            {/* EMAIL/PASSWORD LOGIN */}
+            {/* =================================================
+                EMAIL/PASSWORD FORM
+            ================================================= */}
+
             <form
               onSubmit={handleLogin}
+              className="mt-8"
             >
 
               {/* EMAIL */}
-              <div className="mt-10">
-                <label className="mb-2 block text-sm text-gray-300">
+
+              <div>
+                <label
+                  htmlFor="login-email"
+                  className="
+                    mb-2
+                    block
+                    text-sm
+                    text-gray-300
+                  "
+                >
                   Email
                 </label>
 
-                <div className="flex items-center rounded-xl border border-white/10 bg-[#111827] px-4">
-
+                <div
+                  className="
+                    flex
+                    items-center
+                    rounded-xl
+                    border
+                    border-white/10
+                    bg-[#111827]
+                    px-4
+                    transition
+                    focus-within:border-indigo-500/50
+                  "
+                >
                   <Mail
-                    className="text-gray-500"
                     size={18}
+                    className="text-gray-500"
                   />
 
                   <input
+                    id="login-email"
                     type="email"
                     value={email}
-                    onChange={(e) =>
+                    onChange={(event) =>
                       setEmail(
-                        e.target.value
+                        event.target.value
                       )
                     }
                     placeholder="Enter your email"
-                    className="w-full bg-transparent px-3 py-4 text-white outline-none"
                     autoComplete="email"
+                    className="
+                      w-full
+                      bg-transparent
+                      px-3
+                      py-4
+                      text-white
+                      outline-none
+                      placeholder:text-gray-600
+                    "
                   />
-
                 </div>
               </div>
 
               {/* PASSWORD */}
-              <div className="mt-6">
 
-                <label className="mb-2 block text-sm text-gray-300">
+              <div className="mt-6">
+                <label
+                  htmlFor="login-password"
+                  className="
+                    mb-2
+                    block
+                    text-sm
+                    text-gray-300
+                  "
+                >
                   Password
                 </label>
 
-                <div className="flex items-center rounded-xl border border-white/10 bg-[#111827] px-4">
-
+                <div
+                  className="
+                    flex
+                    items-center
+                    rounded-xl
+                    border
+                    border-white/10
+                    bg-[#111827]
+                    px-4
+                    transition
+                    focus-within:border-indigo-500/50
+                  "
+                >
                   <Lock
-                    className="text-gray-500"
                     size={18}
+                    className="text-gray-500"
                   />
 
                   <input
+                    id="login-password"
                     type={
                       showPassword
                         ? "text"
                         : "password"
                     }
                     value={password}
-                    onChange={(e) =>
+                    onChange={(event) =>
                       setPassword(
-                        e.target.value
+                        event.target.value
                       )
                     }
                     placeholder="Enter password"
-                    className="w-full bg-transparent px-3 py-4 text-white outline-none"
                     autoComplete="current-password"
+                    className="
+                      w-full
+                      bg-transparent
+                      px-3
+                      py-4
+                      text-white
+                      outline-none
+                      placeholder:text-gray-600
+                    "
                   />
 
                   <button
                     type="button"
                     onClick={() =>
                       setShowPassword(
-                        (value) => !value
+                        (current) =>
+                          !current
                       )
                     }
-                    className="text-gray-400 hover:text-white"
+                    className="
+                      text-gray-400
+                      transition
+                      hover:text-white
+                    "
                     aria-label={
                       showPassword
                         ? "Hide password"
@@ -286,15 +465,34 @@ export default function Login() {
                       <Eye size={18} />
                     )}
                   </button>
-
                 </div>
               </div>
 
               {/* LOGIN BUTTON */}
-              <Button
+
+              <button
                 type="submit"
                 disabled={loading}
-                className="mt-8 flex w-full items-center justify-center gap-2"
+                className="
+                  mt-8
+                  flex
+                  w-full
+                  items-center
+                  justify-center
+                  gap-2
+                  rounded-xl
+                  bg-indigo-600
+                  px-6
+                  py-4
+                  font-semibold
+                  text-white
+                  shadow-lg
+                  shadow-indigo-600/20
+                  transition
+                  hover:bg-indigo-500
+                  disabled:cursor-not-allowed
+                  disabled:opacity-60
+                "
               >
                 {loading
                   ? "Logging in..."
@@ -303,35 +501,67 @@ export default function Login() {
                 {!loading && (
                   <ArrowRight size={18} />
                 )}
-              </Button>
-
+              </button>
             </form>
 
-            {/* DIVIDER */}
-            <div className="my-6 flex items-center gap-3">
+            {/* =================================================
+                OR
+            ================================================= */}
+
+            <div
+              className="
+                my-7
+                flex
+                items-center
+                gap-4
+              "
+            >
               <div className="h-px flex-1 bg-white/10" />
+
               <span className="text-xs text-gray-500">
                 OR
               </span>
+
               <div className="h-px flex-1 bg-white/10" />
             </div>
 
-            {/* SINGLE GOOGLE LOGIN COMPONENT */}
-            <GoogleLogin
-              onSuccess={
-                handleGoogleSuccess
-              }
-              onError={
-                handleGoogleError
-              }
-            />
+            {/* =================================================
+                GOOGLE LOGIN
+            ================================================= */}
 
-            {/* SIGNUP */}
-            <p className="mt-8 text-center text-gray-400">
+            <div className="w-full">
+              <GoogleLogin
+                onSuccess={
+                  handleGoogleSuccess
+                }
+                onError={
+                  handleGoogleError
+                }
+              />
+            </div>
+
+            {/* =================================================
+                SIGN UP
+            ================================================= */}
+
+            <p
+              className="
+                mt-8
+                text-center
+                text-sm
+                text-gray-400
+              "
+            >
               Don't have an account?{" "}
+
               <Link
                 to="/signup"
-                className="font-medium text-indigo-400 hover:text-indigo-300"
+                className="
+                  font-medium
+                  text-indigo-400
+                  transition
+                  hover:text-indigo-300
+                "
               >
                 Sign Up
               </Link>

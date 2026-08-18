@@ -19,9 +19,7 @@ interface GoogleLoginProps {
     };
   }) => void;
 
-  onError?: (
-    message: string
-  ) => void;
+  onError?: (message: string) => void;
 }
 
 declare global {
@@ -34,7 +32,7 @@ declare global {
             callback: (
               response: GoogleCredentialResponse
             ) => void;
-          }) => void;
+        }) => void;
 
           renderButton: (
             element: HTMLElement,
@@ -57,11 +55,100 @@ declare global {
 const GOOGLE_SCRIPT_ID =
   "google-identity-services-script";
 
+/*
+ * Google Identity Services should only be
+ * initialized once for the application.
+ *
+ * We keep the latest callback separately so
+ * React remounting does not leave us with an
+ * old callback.
+ */
+
+let googleClientInitialized = false;
+
+let latestCredentialHandler:
+  | ((
+      response: GoogleCredentialResponse
+    ) => void)
+  | null = null;
+
+/*
+ * Load Google Identity Services.
+ */
+
+function loadGoogleScript(): Promise<void> {
+  if (window.google) {
+    return Promise.resolve();
+  }
+
+  const existingScript =
+    document.getElementById(
+      GOOGLE_SCRIPT_ID
+    ) as HTMLScriptElement | null;
+
+  if (existingScript) {
+    return new Promise(
+      (resolve, reject) => {
+        existingScript.addEventListener(
+          "load",
+          () => resolve(),
+          { once: true }
+        );
+
+        existingScript.addEventListener(
+          "error",
+          () =>
+            reject(
+              new Error(
+                "Google Identity Services failed to load."
+              )
+            ),
+          { once: true }
+        );
+      }
+    );
+  }
+
+  return new Promise(
+    (resolve, reject) => {
+      const script =
+        document.createElement(
+          "script"
+        );
+
+      script.id =
+        GOOGLE_SCRIPT_ID;
+
+      script.src =
+        "https://accounts.google.com/gsi/client";
+
+      script.async = true;
+      script.defer = true;
+
+      script.onload = () => {
+        resolve();
+      };
+
+      script.onerror = () => {
+        reject(
+          new Error(
+            "Unable to load Google Sign-In."
+          )
+        );
+      };
+
+      document.head.appendChild(
+        script
+      );
+    }
+  );
+}
+
 export default function GoogleLogin({
   onSuccess,
   onError,
 }: GoogleLoginProps) {
-  const googleButtonRef =
+  const buttonRef =
     useRef<HTMLDivElement>(null);
 
   const successRef =
@@ -74,9 +161,9 @@ export default function GoogleLogin({
     useState(false);
 
   /*
-   * Keep the latest callbacks without making
-   * the Google initialization effect run again.
+   * Always keep latest callbacks.
    */
+
   useEffect(() => {
     successRef.current =
       onSuccess;
@@ -88,9 +175,15 @@ export default function GoogleLogin({
   }, [onError]);
 
   useEffect(() => {
+    let cancelled = false;
+
     const clientId =
       import.meta.env
         .VITE_GOOGLE_CLIENT_ID;
+
+    /*
+     * Check Client ID.
+     */
 
     if (!clientId) {
       console.error(
@@ -104,104 +197,193 @@ export default function GoogleLogin({
       return;
     }
 
-    let cancelled = false;
+    /*
+     * Handle Google credential.
+     */
 
-    const initializeGoogle =
-      () => {
-        if (
-          cancelled ||
-          !window.google ||
-          !googleButtonRef.current
-        ) {
+    const handleCredentialResponse =
+      async (
+        response: GoogleCredentialResponse
+      ) => {
+        if (cancelled) {
           return;
         }
 
-        /*
-         * This component is the ONLY place that
-         * initializes Google Identity Services.
-         */
-        window.google.accounts.id.initialize(
-          {
-            client_id: clientId,
+        if (!response?.credential) {
+          errorRef.current?.(
+            "Google credential was not received."
+          );
 
-            callback:
-              async (
-                response
-              ) => {
-                try {
-                  setLoading(true);
+          return;
+        }
 
-                  const apiUrl =
-                    import.meta.env
-                      .VITE_API_URL ||
-                    "http://localhost:5000";
+        try {
+          setLoading(true);
 
-                  const result =
-                    await fetch(
-                      `${apiUrl}/api/auth/google`,
-                      {
-                        method: "POST",
-                        headers: {
-                          "Content-Type":
-                            "application/json",
-                        },
-                        body: JSON.stringify({
-                          credential:
-                            response.credential,
-                        }),
-                      }
-                    );
+          const apiUrl =
+            import.meta.env.VITE_API_URL ||
+            "http://localhost:5000";
 
-                  const data =
-                    await result.json();
+          console.log(
+            "Google credential received."
+          );
 
-                  if (
-                    !result.ok ||
-                    !data.success
-                  ) {
-                    throw new Error(
-                      data.message ||
-                        "Google authentication failed."
-                    );
-                  }
+          console.log(
+            "Sending Google credential to:",
+            `${apiUrl}/api/auth/google`
+          );
 
-                  successRef.current?.({
-                    token: data.token,
-                    user: {
-                      id: data._id,
-                      name: data.name,
-                      email: data.email,
-                      picture:
-                        data.picture ||
-                        "",
-                    },
-                  });
-                } catch (error) {
-                  console.error(
-                    "Google login error:",
-                    error
-                  );
+          const result =
+            await fetch(
+              `${apiUrl}/api/auth/google`,
+              {
+                method: "POST",
 
-                  errorRef.current?.(
-                    error instanceof Error
-                      ? error.message
-                      : "Google authentication failed."
-                  );
-                } finally {
-                  setLoading(false);
-                }
-              },
+                headers: {
+                  "Content-Type":
+                    "application/json",
+                },
+
+                body: JSON.stringify({
+                  credential:
+                    response.credential,
+                }),
+              }
+            );
+
+          let data;
+
+          try {
+            data =
+              await result.json();
+          } catch {
+            throw new Error(
+              "Invalid response from authentication server."
+            );
           }
-        );
 
-        if (
-          googleButtonRef.current
-        ) {
-          googleButtonRef.current.innerHTML =
+          console.log(
+            "Google backend response:",
+            data
+          );
+
+          if (
+            !result.ok ||
+            !data.success
+          ) {
+            throw new Error(
+              data.message ||
+                "Google authentication failed."
+            );
+          }
+
+          /*
+           * Build user object.
+           */
+
+          const user = {
+            id: String(data._id),
+            name:
+              data.name ||
+              "Google User",
+            email: data.email,
+            picture:
+              data.picture || "",
+          };
+
+          /*
+           * Send result to Login.tsx.
+           */
+
+          successRef.current?.({
+            token: data.token,
+            user,
+          });
+        } catch (error) {
+          console.error(
+            "Google login error:",
+            error
+          );
+
+          const message =
+            error instanceof Error
+              ? error.message
+              : "Google authentication failed.";
+
+          errorRef.current?.(
+            message
+          );
+        } finally {
+          setLoading(false);
+        }
+      };
+
+    /*
+     * Store the latest credential handler.
+     */
+
+    latestCredentialHandler =
+      handleCredentialResponse;
+
+    /*
+     * Initialize Google.
+     */
+
+    const initializeGoogle =
+      async () => {
+        try {
+          await loadGoogleScript();
+
+          if (
+            cancelled ||
+            !window.google ||
+            !buttonRef.current
+          ) {
+            return;
+          }
+
+          /*
+           * Initialize only once.
+           */
+
+          if (
+            !googleClientInitialized
+          ) {
+            window.google.accounts.id.initialize(
+              {
+                client_id: clientId,
+
+                callback: (
+                  response
+                ) => {
+                  latestCredentialHandler?.(
+                    response
+                  );
+                },
+              }
+            );
+
+            googleClientInitialized =
+              true;
+
+            console.log(
+              "Google Identity Services initialized."
+            );
+          }
+
+          /*
+           * Clear existing button.
+           */
+
+          buttonRef.current.innerHTML =
             "";
 
+          /*
+           * Render Google button.
+           */
+
           window.google.accounts.id.renderButton(
-            googleButtonRef.current,
+            buttonRef.current,
             {
               theme: "outline",
               size: "large",
@@ -210,76 +392,64 @@ export default function GoogleLogin({
               shape: "rectangular",
             }
           );
+
+          console.log(
+            "Google Sign-In button rendered."
+          );
+        } catch (error) {
+          console.error(
+            "Google initialization error:",
+            error
+          );
+
+          errorRef.current?.(
+            error instanceof Error
+              ? error.message
+              : "Unable to load Google Sign-In."
+          );
         }
       };
 
-    const existingScript =
-      document.getElementById(
-        GOOGLE_SCRIPT_ID
-      ) as HTMLScriptElement | null;
-
-    if (window.google) {
-      initializeGoogle();
-      return () => {
-        cancelled = true;
-      };
-    }
-
-    if (existingScript) {
-      existingScript.addEventListener(
-        "load",
-        initializeGoogle,
-        { once: true }
-      );
-
-      return () => {
-        cancelled = true;
-        existingScript.removeEventListener(
-          "load",
-          initializeGoogle
-        );
-      };
-    }
-
-    const script =
-      document.createElement(
-        "script"
-      );
-
-    script.id =
-      GOOGLE_SCRIPT_ID;
-
-    script.src =
-      "https://accounts.google.com/gsi/client";
-
-    script.async = true;
-    script.defer = true;
-
-    script.onload =
-      initializeGoogle;
-
-    script.onerror = () => {
-      errorRef.current?.(
-        "Unable to load Google Sign-In. Please try again."
-      );
-    };
-
-    document.head.appendChild(
-      script
-    );
+    initializeGoogle();
 
     return () => {
       cancelled = true;
-      script.onload = null;
+
+      /*
+       * Do not clear the global Google
+       * initialization because another
+       * component may reuse it.
+       */
+
+      if (
+        latestCredentialHandler ===
+        handleCredentialResponse
+      ) {
+        latestCredentialHandler =
+          null;
+      }
     };
   }, []);
 
   return (
-    <div className="flex w-full flex-col items-center gap-2">
-
+    <div
+      className="
+        flex
+        w-full
+        flex-col
+        items-center
+        gap-2
+      "
+    >
       <div
-        ref={googleButtonRef}
-        className="flex min-h-[44px] w-full justify-center overflow-hidden"
+        ref={buttonRef}
+        className="
+          flex
+          min-h-[44px]
+          w-full
+          justify-center
+          overflow-hidden
+        "
       />
 
       {loading && (
@@ -287,7 +457,6 @@ export default function GoogleLogin({
           Signing in with Google...
         </p>
       )}
-
     </div>
   );
 }
