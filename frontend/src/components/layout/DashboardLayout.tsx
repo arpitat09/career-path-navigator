@@ -3,39 +3,14 @@ import Sidebar from "../sidebar/Sidebar";
 
 export default function DashboardLayout() {
   return (
-    <div className="min-h-screen bg-[#050816] text-white">
-
-      {/* =====================================================
-          FIXED SIDEBAR
-      ===================================================== */}
-
+    <div className="min-h-screen overflow-x-hidden bg-[#050816] text-white">
       <Sidebar />
 
-
-      {/* =====================================================
-          MAIN CONTENT
-
-          The left margin makes room for the fixed sidebar.
-          The top padding prevents content from touching the
-          fixed top area on smaller screens.
-      ===================================================== */}
-
-      <main
-        className="
-          min-h-screen
-          lg:ml-72
-          bg-[#050816]
-        "
-      >
-
-        <div className="min-h-screen w-full px-4 pb-10 pt-6 sm:px-6 lg:px-8">
-
+      <main className="min-h-screen w-full bg-[#050816] lg:pl-72">
+        <div className="min-h-screen w-full px-4 pb-8 pt-20 sm:px-6 sm:pt-24 lg:px-8 lg:pt-8">
           <Outlet />
-
         </div>
-
       </main>
-
     </div>
   );
 }

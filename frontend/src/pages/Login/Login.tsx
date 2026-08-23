@@ -59,9 +59,12 @@ export default function Login() {
         `${API_URL}/api/auth/login`,
         {
           method: "POST",
+
           headers: {
-            "Content-Type": "application/json",
+            "Content-Type":
+              "application/json",
           },
+
           body: JSON.stringify({
             email: email.trim(),
             password,
@@ -69,7 +72,8 @@ export default function Login() {
         }
       );
 
-      const data = await response.json();
+      const data =
+        await response.json();
 
       if (!response.ok || !data.success) {
         throw new Error(
@@ -78,29 +82,34 @@ export default function Login() {
         );
       }
 
-      // Save JWT
       localStorage.setItem(
         "token",
         data.token
       );
 
-      // Save user
       localStorage.setItem(
         "user",
         JSON.stringify({
           id: data._id,
           name: data.name,
           email: data.email,
-          picture: data.picture || "",
+          picture:
+            data.picture || "",
         })
       );
 
-      // Navigate to dashboard
-      navigate("/dashboard", {
-        replace: true,
-      });
+      navigate(
+        "/dashboard",
+        {
+          replace: true,
+        }
+      );
+
     } catch (err) {
-      console.error("Login error:", err);
+      console.error(
+        "Login error:",
+        err
+      );
 
       if (err instanceof Error) {
         setError(err.message);
@@ -109,38 +118,36 @@ export default function Login() {
           "Unable to login. Please try again."
         );
       }
+
     } finally {
       setLoading(false);
     }
   };
 
+
   // =====================================================
   // GOOGLE LOGIN SUCCESS
   // =====================================================
 
-  const handleGoogleSuccess = (data: {
-    token: string;
-    user: {
-      id: string;
-      name: string;
-      email: string;
-      picture?: string;
-    };
-  }) => {
-    console.log(
-      "Google login successful:",
-      data
-    );
+  const handleGoogleSuccess = (
+    data: {
+      token: string;
 
+      user: {
+        id: string;
+        name: string;
+        email: string;
+        picture?: string;
+      };
+    }
+  ) => {
     setError("");
 
-    // Save JWT
     localStorage.setItem(
       "token",
       data.token
     );
 
-    // Save user
     localStorage.setItem(
       "user",
       JSON.stringify({
@@ -152,11 +159,14 @@ export default function Login() {
       })
     );
 
-    // Go to dashboard
-    navigate("/dashboard", {
-      replace: true,
-    });
+    navigate(
+      "/dashboard",
+      {
+        replace: true,
+      }
+    );
   };
+
 
   // =====================================================
   // GOOGLE LOGIN ERROR
@@ -173,8 +183,17 @@ export default function Login() {
     setError(message);
   };
 
+
   return (
-    <div className="relative min-h-screen bg-[#050816] text-white">
+    <div
+      className="
+        relative
+        min-h-screen
+        overflow-x-hidden
+        bg-[#050816]
+        text-white
+      "
+    >
 
       {/* =================================================
           BACK TO HOME
@@ -184,8 +203,8 @@ export default function Login() {
         to="/"
         className="
           absolute
-          left-6
-          top-6
+          left-4
+          top-4
           z-50
           flex
           items-center
@@ -193,23 +212,30 @@ export default function Login() {
           rounded-xl
           border
           border-white/10
-          bg-[#080b18]
-          px-4
-          py-2.5
-          text-sm
+          bg-[#080b18]/90
+          px-3
+          py-2
+          text-xs
           text-gray-300
           shadow-lg
+          backdrop-blur
           transition
           hover:bg-white/10
           hover:text-white
+          sm:left-6
+          sm:top-6
+          sm:px-4
+          sm:py-2.5
+          sm:text-sm
         "
       >
-        <HomeIcon size={17} />
+        <HomeIcon size={16} />
 
         <span>
           Back to Home
         </span>
       </Link>
+
 
       {/* =================================================
           MAIN GRID
@@ -217,8 +243,9 @@ export default function Login() {
 
       <div className="grid min-h-screen lg:grid-cols-2">
 
+
         {/* =================================================
-            LEFT SIDE
+            LEFT SIDE - DESKTOP
         ================================================= */}
 
         <div
@@ -229,21 +256,33 @@ export default function Login() {
             bg-gradient-to-br
             from-indigo-700
             to-purple-900
-            p-16
+            p-10
+            xl:p-16
             lg:flex
           "
         >
-          <h1 className="text-5xl font-bold">
+
+          <h1
+            className="
+              text-4xl
+              font-bold
+              xl:text-5xl
+            "
+          >
             CareerPath AI
           </h1>
 
+
           <p
             className="
-              mt-8
+              mt-6
               max-w-xl
-              text-xl
-              leading-9
+              text-base
+              leading-8
               text-indigo-100
+              xl:mt-8
+              xl:text-xl
+              xl:leading-9
             "
           >
             Welcome back. Continue your
@@ -252,7 +291,9 @@ export default function Login() {
             resume analysis, interview
             preparation, and career guidance.
           </p>
+
         </div>
+
 
         {/* =================================================
             RIGHT SIDE
@@ -265,41 +306,70 @@ export default function Login() {
             items-center
             justify-center
             bg-[#050816]
-            p-8
+            px-4
+            pb-6
+            pt-20
+            sm:px-6
+            sm:pb-8
+            sm:pt-24
+            lg:p-8
           "
         >
+
+
+          {/* LOGIN CARD */}
+
           <div
             className="
               w-full
               max-w-md
-              rounded-3xl
+              rounded-2xl
               border
               border-white/10
               bg-white/5
-              p-10
+              p-5
               shadow-2xl
               backdrop-blur-xl
+              sm:rounded-3xl
+              sm:p-8
+              md:p-10
             "
           >
 
+
             {/* TITLE */}
 
-            <h2 className="text-4xl font-bold">
+            <h2
+              className="
+                text-2xl
+                font-bold
+                sm:text-3xl
+                md:text-4xl
+              "
+            >
               Welcome Back
             </h2>
 
-            <p className="mt-3 text-gray-400">
+
+            <p
+              className="
+                mt-2
+                text-sm
+                text-gray-400
+                sm:mt-3
+                sm:text-base
+              "
+            >
               Sign in to your CareerPath AI account
             </p>
 
-            {/* =================================================
-                ERROR MESSAGE
-            ================================================= */}
+
+            {/* ERROR */}
 
             {error && (
               <div
                 className="
-                  mt-6
+                  mt-5
                   rounded-xl
                   border
                   border-red-500/20
@@ -309,24 +379,28 @@ export default function Login() {
                   text-sm
                   leading-6
                   text-red-400
+                  sm:mt-6
                 "
               >
                 {error}
               </div>
             )}
 
+
             {/* =================================================
-                EMAIL/PASSWORD FORM
+                LOGIN FORM
             ================================================= */}
 
             <form
               onSubmit={handleLogin}
-              className="mt-8"
+              className="mt-6 sm:mt-8"
             >
+
 
               {/* EMAIL */}
 
               <div>
+
                 <label
                   htmlFor="login-email"
                   className="
@@ -339,6 +413,7 @@ export default function Login() {
                   Email
                 </label>
 
+
                 <div
                   className="
                     flex
@@ -347,15 +422,21 @@ export default function Login() {
                     border
                     border-white/10
                     bg-[#111827]
-                    px-4
+                    px-3
                     transition
                     focus-within:border-indigo-500/50
+                    sm:px-4
                   "
                 >
+
                   <Mail
                     size={18}
-                    className="text-gray-500"
+                    className="
+                      shrink-0
+                      text-gray-500
+                    "
                   />
+
 
                   <input
                     id="login-email"
@@ -369,21 +450,29 @@ export default function Login() {
                     placeholder="Enter your email"
                     autoComplete="email"
                     className="
+                      min-w-0
                       w-full
                       bg-transparent
                       px-3
-                      py-4
+                      py-3
+                      text-sm
                       text-white
                       outline-none
                       placeholder:text-gray-600
+                      sm:py-4
+                      sm:text-base
                     "
                   />
+
                 </div>
+
               </div>
+
 
               {/* PASSWORD */}
 
-              <div className="mt-6">
+              <div className="mt-5 sm:mt-6">
+
                 <label
                   htmlFor="login-password"
                   className="
@@ -396,6 +485,7 @@ export default function Login() {
                   Password
                 </label>
 
+
                 <div
                   className="
                     flex
@@ -404,15 +494,21 @@ export default function Login() {
                     border
                     border-white/10
                     bg-[#111827]
-                    px-4
+                    px-3
                     transition
                     focus-within:border-indigo-500/50
+                    sm:px-4
                   "
                 >
+
                   <Lock
                     size={18}
-                    className="text-gray-500"
+                    className="
+                      shrink-0
+                      text-gray-500
+                    "
                   />
+
 
                   <input
                     id="login-password"
@@ -430,15 +526,20 @@ export default function Login() {
                     placeholder="Enter password"
                     autoComplete="current-password"
                     className="
+                      min-w-0
                       w-full
                       bg-transparent
                       px-3
-                      py-4
+                      py-3
+                      text-sm
                       text-white
                       outline-none
                       placeholder:text-gray-600
+                      sm:py-4
+                      sm:text-base
                     "
                   />
+
 
                   <button
                     type="button"
@@ -449,6 +550,7 @@ export default function Login() {
                       )
                     }
                     className="
+                      shrink-0
                       text-gray-400
                       transition
                       hover:text-white
@@ -465,8 +567,11 @@ export default function Login() {
                       <Eye size={18} />
                     )}
                   </button>
+
                 </div>
+
               </div>
+
 
               {/* LOGIN BUTTON */}
 
@@ -474,7 +579,7 @@ export default function Login() {
                 type="submit"
                 disabled={loading}
                 className="
-                  mt-8
+                  mt-6
                   flex
                   w-full
                   items-center
@@ -483,7 +588,8 @@ export default function Login() {
                   rounded-xl
                   bg-indigo-600
                   px-6
-                  py-4
+                  py-3
+                  text-sm
                   font-semibold
                   text-white
                   shadow-lg
@@ -492,6 +598,9 @@ export default function Login() {
                   hover:bg-indigo-500
                   disabled:cursor-not-allowed
                   disabled:opacity-60
+                  sm:mt-8
+                  sm:py-4
+                  sm:text-base
                 "
               >
                 {loading
@@ -501,8 +610,11 @@ export default function Login() {
                 {!loading && (
                   <ArrowRight size={18} />
                 )}
+
               </button>
+
             </form>
+
 
             {/* =================================================
                 OR
@@ -510,12 +622,15 @@ export default function Login() {
 
             <div
               className="
-                my-7
+                my-5
                 flex
                 items-center
-                gap-4
+                gap-3
+                sm:my-7
+                sm:gap-4
               "
             >
+
               <div className="h-px flex-1 bg-white/10" />
 
               <span className="text-xs text-gray-500">
@@ -523,13 +638,20 @@ export default function Login() {
               </span>
 
               <div className="h-px flex-1 bg-white/10" />
+
             </div>
+
 
             {/* =================================================
                 GOOGLE LOGIN
             ================================================= */}
 
-            <div className="w-full">
+            <div
+              className="
+                w-full
+                overflow-hidden
+              "
+            >
               <GoogleLogin
                 onSuccess={
                   handleGoogleSuccess
@@ -540,16 +662,19 @@ export default function Login() {
               />
             </div>
 
+
             {/* =================================================
                 SIGN UP
             ================================================= */}
 
             <p
               className="
-                mt-8
+                mt-6
                 text-center
                 text-sm
                 text-gray-400
+                sm:mt-8
+                sm:text-base
               "
             >
               Don't have an account?{" "}
@@ -565,11 +690,15 @@ export default function Login() {
               >
                 Sign Up
               </Link>
+
             </p>
 
           </div>
+
         </div>
+
       </div>
+
     </div>
   );
 }
